@@ -190,7 +190,7 @@ public void cleanUpRooms() {
 			future.thenApply(s ->{
 				return s;
 			}).exceptionally(err -> {
-				System.out.println(p.toString() + "was removed from room " + pair.getKey().toString());
+				System.out.println(p.toString() + " was removed from room " + pair.getKey().toString());
 				((HashSet<Participant>)pair.getValue()).remove(p);
 				return err;
 			});
