@@ -181,6 +181,7 @@ public class ChatServiceActor extends AbstractActor {
 	}
 
 public void cleanUpRooms() {
+		//todo increase timeout
 	Iterator it = rooms.entrySet().iterator();
 	while(it.hasNext()){
 		Map.Entry pair = (Map.Entry)it.next();
