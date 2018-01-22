@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="ce-ue-17w_api-source">
+    <CLASSES />
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/libs/ce-ue-17w_api-source.jar!/" />
+    </SOURCES>
+  </library>
+</component>

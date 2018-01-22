@@ -1,8 +1,6 @@
 package at.jku.ce.ue.service;
 
-import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
-import akka.actor.ActorSelection;
+import akka.actor.*;
 import akka.pattern.PatternsCS;
 import at.jku.ce.ue.api.*;
 import at.jku.ce.ue.data.Room;
@@ -12,8 +10,9 @@ import com.typesafe.config.ConfigFactory;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Logger;
 
-public class ChatServiceActor extends AbstractActor {
+public class ChatServiceActor extends AbstractActor implements AbstractLoggingActor {
 
 	private HashMap<Room, HashSet<Participant>> rooms = new HashMap<>();
 	private CEHelper helper = new CEHelper(this.context().system(), ConfigFactory.load("application.conf"));
@@ -30,10 +29,9 @@ public class ChatServiceActor extends AbstractActor {
 			this.cleanUpRooms();
 		})
 				.match(ChatServiceRegistered.class, register ->{
-					System.out.println("ChatServiceActor: chat service registered");
+					log().info("ChatServiceActor: chat service registered");
 					response = true;
 				})
-
 				.match(JoinRoom.class, join -> {
 					if(join.getRoom() != null && join.getName() != null) {
 						participants = rooms.get(join.getRoom());
@@ -44,7 +42,8 @@ public class ChatServiceActor extends AbstractActor {
 							boolean added = participants.add(new Participant(join.getName(), this.sender()));
 							if(added) {
 								this.sender().tell(new RoomJoined(), this.self());
-								System.out.println("ChatServiceActor: " + join.getName() + " joined");
+								log().info("ChatServiceActor: " + join.getName() + " joined");
+
 								for (Participant p : participants) {
 									p.ref.tell(new NewMessageAvailable(join.getRoom(), join.getName(), join.getName() + " joined the conversation"), self());
 								}
@@ -56,7 +55,6 @@ public class ChatServiceActor extends AbstractActor {
 					}
 				})
 
-
 				.match(GetAvailableRooms.class, getAvailableRooms -> {
 					Set<Room> roomsSet = new HashSet<>();
 					roomsSet.addAll(rooms.keySet());
@@ -66,12 +64,9 @@ public class ChatServiceActor extends AbstractActor {
 				.match(Start.class, start -> {
 					for(String name:start.roomName) rooms.put(new Room(name), new HashSet<Participant>());
 
-
-					//rooms.put(new Room("room#1"), new HashSet<>());
-					//rooms.put(new Room("room#2"), new HashSet<>());
-
 					response = false;
-					rooms.keySet().forEach(System.out::println);
+					for(Room r:rooms.keySet()) log().info(r.getName());
+					//rooms.keySet().forEach(System.out::println);
 					ActorSelection registry = this.context().system().actorSelection(helper.getChatServiceRegistry());
 					registry.tell(new RegisterChatService(), self());
 					timer.schedule(getRegistryTask(), 5000);
@@ -123,9 +118,7 @@ public class ChatServiceActor extends AbstractActor {
 				})
 
 				.build();
-
 	}
-
 
 
 	public static class Start{
@@ -173,7 +166,7 @@ public class ChatServiceActor extends AbstractActor {
 			@Override
 			public void run() {
 				if(!response) {
-					System.out.print("ChatServiceActor ERROR: ChatService not registered");
+					log().info("ChatServiceActor ERROR: ChatService not registered");
 				}
 				response = false;
 			}
@@ -187,10 +180,10 @@ public void cleanUpRooms() {
 		Map.Entry pair = (Map.Entry)it.next();
 		for(Participant p:(HashSet<Participant>)pair.getValue()){
 			CompletableFuture<Object> future = PatternsCS.ask(p.ref, new GetStatus(), 5000).toCompletableFuture();
-			future.thenApply(s ->{
+			future.thenApply(s -> {
 				return s;
 			}).exceptionally(err -> {
-				System.out.println(p.toString() + " was removed from room " + pair.getKey().toString());
+				log().info(p.toString() + " was removed from room " + pair.getKey().toString());
 				((HashSet<Participant>)pair.getValue()).remove(p);
 				return err;
 			});
