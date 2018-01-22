@@ -1,0 +1,57 @@
+allprojects {
+    apply plugin: 'java'
+    apply plugin: 'gradle-one-jar'
+
+    sourceCompatibility = 1.8
+
+    repositories {
+        mavenCentral()
+        flatDir {
+            dirs 'libs'
+        }
+    }
+
+    dependencies {
+        compile files('../libs/ce-ue-17w_api-v3.jar')
+
+        compile group: 'org.scala-lang', name: 'scala-library', version: '2.12.3'
+        compile group: 'org.scalikejdbc', name: 'scalikejdbc_2.12', version: '3.1.0'
+        compile group: 'mysql', name: 'mysql-connector-java', version: '5.1.6'
+
+        compile group: 'com.typesafe.akka', name: 'akka-actor_2.12', version: '2.5.7'
+        compile group: 'com.typesafe.akka', name: 'akka-remote_2.12', version: '2.5.7'
+
+        compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.21'
+        compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.1.7'
+
+        testCompile group: 'com.h2database', name: 'h2', version: '1.4.196'
+        testCompile group: 'junit', name: 'junit', version: '4.12'
+    }
+}
+
+project(':chat-client') {
+    def version = '0.1.0-1'
+
+    task packClient(type: OneJar) {
+        mainClass = 'at.jku.ce.ue.client.ChatClient'
+        archiveName = 'chat-client_' + version + '.pkg.jar'
+    }
+}
+
+project(':chat-service') {
+    def version = '0.1.0-1'
+
+    task packService(type: OneJar) {
+        mainClass = 'at.jku.ce.ue.service.ChatService'
+        archiveName = 'chat-service_' + version + '.pkg.jar'
+    }
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.github.rholder:gradle-one-jar:1.0.4'
+    }
+}

@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: com.typesafe.akka:akka-protobuf_2.12:2.5.7">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.typesafe.akka/akka-protobuf_2.12/2.5.7/ac80ccc2c4e473a996f4a7fd3c8f5e32327ae2f3/akka-protobuf_2.12-2.5.7.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.typesafe.akka/akka-protobuf_2.12/2.5.7/55018a24cdedc720fe7705c572d08ace37b33af2/akka-protobuf_2.12-2.5.7-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/ce-messenger.iml" filepath="$PROJECT_DIR$/ce-messenger.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ce-messenger_main.iml" filepath="$PROJECT_DIR$/.idea/modules/ce-messenger_main.iml" group="ce-messenger" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ce-messenger_test.iml" filepath="$PROJECT_DIR$/.idea/modules/ce-messenger_test.iml" group="ce-messenger" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/chat-client/chat-client.iml" filepath="$PROJECT_DIR$/.idea/modules/chat-client/chat-client.iml" group="chat-client" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/chat-client/chat-client_main.iml" filepath="$PROJECT_DIR$/.idea/modules/chat-client/chat-client_main.iml" group="chat-client" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/chat-client/chat-client_test.iml" filepath="$PROJECT_DIR$/.idea/modules/chat-client/chat-client_test.iml" group="chat-client" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/chat-service/chat-service.iml" filepath="$PROJECT_DIR$/.idea/modules/chat-service/chat-service.iml" group="chat-service" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/chat-service/chat-service_main.iml" filepath="$PROJECT_DIR$/.idea/modules/chat-service/chat-service_main.iml" group="chat-service" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/chat-service/chat-service_test.iml" filepath="$PROJECT_DIR$/.idea/modules/chat-service/chat-service_test.iml" group="chat-service" />
+    </modules>
+  </component>
+</project>
