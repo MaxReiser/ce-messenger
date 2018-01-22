@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 
-public class ChatServiceActor extends AbstractActor implements AbstractLoggingActor {
+public class ChatServiceActor extends AbstractLoggingActor {
 
 	private HashMap<Room, HashSet<Participant>> rooms = new HashMap<>();
 	private CEHelper helper = new CEHelper(this.context().system(), ConfigFactory.load("application.conf"));

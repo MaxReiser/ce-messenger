@@ -9,7 +9,7 @@ import com.typesafe.config.ConfigFactory;
 
 import java.util.Random;
 
-public class ChatService extends AbstractLoggingActor{
+public class ChatService {
 
 	public static void main(String[] args) {
 		Random r = new Random();
