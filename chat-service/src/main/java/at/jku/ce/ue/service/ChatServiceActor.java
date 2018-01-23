@@ -10,7 +10,7 @@ import com.typesafe.config.ConfigFactory;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.logging.Logger;
+
 
 public class ChatServiceActor extends AbstractLoggingActor {
 
@@ -22,6 +22,7 @@ public class ChatServiceActor extends AbstractLoggingActor {
 	Timer timer = new Timer();
 	Boolean response = false;
 
+	//todo preStart() method?
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder().match(GetStatus.class, status ->{
@@ -136,7 +137,8 @@ public class ChatServiceActor extends AbstractLoggingActor {
 		Start() {
 			roomName[0] = "room#1";
 			roomName[1] = "room#2";
-		} }
+		}
+	}
 
 	private class Participant implements Serializable, Comparable<Participant>{
 		private String name;
