@@ -24,6 +24,18 @@ public class ChatServiceActor extends AbstractLoggingActor {
 
 	//todo preStart() method?
 	@Override
+	public void preStart() {
+		rooms.put(new Room("room#1"), new HashSet<>());
+		rooms.put(new Room("room#2"), new HashSet<>());
+
+		response = false;
+		for(Room r:rooms.keySet()) log().info("Available Rooms: " + r.getName());
+		ActorSelection registry = this.context().system().actorSelection(helper.getChatServiceRegistry());
+		registry.tell(new RegisterChatService(), self());
+		timer.schedule(getRegistryTask(), 5000);
+	}
+
+	@Override
 	public Receive createReceive() {
 		return receiveBuilder().match(GetStatus.class, status ->{
 			this.sender().tell(new Heartbeat(), self());
@@ -62,16 +74,16 @@ public class ChatServiceActor extends AbstractLoggingActor {
 					this.sender().tell(new AvailableRooms(helper.getActorPath(self()), roomsSet), self());
 				})
 
-				.match(Start.class, start -> {
-					for(String name:start.roomName) rooms.put(new Room(name), new HashSet<Participant>());
-
-					response = false;
-					for(Room r:rooms.keySet()) log().info(r.getName());
-					//rooms.keySet().forEach(System.out::println);
-					ActorSelection registry = this.context().system().actorSelection(helper.getChatServiceRegistry());
-					registry.tell(new RegisterChatService(), self());
-					timer.schedule(getRegistryTask(), 5000);
-				})
+//				.match(Start.class, start -> {
+//					for(String name:start.roomName) rooms.put(new Room(name), new HashSet<Participant>());
+//
+//					response = false;
+//					for(Room r:rooms.keySet()) log().info(r.getName());
+//					//rooms.keySet().forEach(System.out::println);
+//					ActorSelection registry = this.context().system().actorSelection(helper.getChatServiceRegistry());
+//					registry.tell(new RegisterChatService(), self());
+//					timer.schedule(getRegistryTask(), 5000);
+//				})
 
 				.match(LeaveRoom.class, leaveRoom -> {
 					if(leaveRoom.getRoom() != null) {

@@ -12,19 +12,17 @@ import java.util.Random;
 public class ChatService {
 
 	public static void main(String[] args) {
-		Random r = new Random();
 
-		//ActorSystem chatServiceSystem = ActorSystem.create(r.nextInt(100) + "-chat-service-#53");
 		ActorSystem chatServiceSystem = ActorSystem.create("test2");
 		CEHelper helper = new CEHelper(chatServiceSystem, ConfigFactory.load("application.conf"));
 
-		// sample actor
+		// ChatServiceActor
 		ActorRef sampleActor = chatServiceSystem.actorOf(Props.create(ChatServiceActor.class), "chat-service-actor-53");//sample-actor
 
 		// get fully qualified path of sample actor
 		System.out.println(helper.getActorPath(sampleActor));
 
-		sampleActor.tell(new ChatServiceActor.Start("room#1", "room#2", "room#3"), ActorRef.noSender());
+		//sampleActor.tell(new ChatServiceActor.Start("room#1", "room#2", "room#3"), ActorRef.noSender());
 	}
 
 }
