@@ -112,6 +112,7 @@ public class ChatServiceActor extends AbstractLoggingActor {
 					if(msg.getMessage() != null && msg.getRoom() != null) {
 						participants = null;
 						participants = rooms.get(msg.getRoom());
+						log().info("SendMessage: " + msg.getRoom().toString());
 						if (participants == null) {
 							this.getSender().tell(new ErrorOccurred(ErrorOccurred.Error.ROOM_NOT_AVAILABLE), this.getSelf());
 						} else {
@@ -119,6 +120,7 @@ public class ChatServiceActor extends AbstractLoggingActor {
 							for (Participant p : participants) {
 								if (p.getRef().equals(this.getSender())) {
 									isRoomParticipant = true;
+									log().info("participants: " + isRoomParticipant);
 									break;
 								}
 							}

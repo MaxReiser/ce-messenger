@@ -1,6 +1,5 @@
 package at.jku.ce.ue.service;
 
-import akka.actor.AbstractLoggingActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
