@@ -11,10 +11,9 @@ public class ConsoleInputActor extends AbstractActor {
         return receiveBuilder().match(Read.class, start ->{
             BufferedReader br = null;
             try {
-                System.out.println("reading from keyboard...");
+                printWhite("reading from keyboard...");
                 br = new BufferedReader(new InputStreamReader(System.in));
                 String input = br.readLine();
-                System.err.println(input);
                 this.getSender().tell(new ChatRoomActor.UserInput(input), this.getSelf());
             }
             catch(Exception e){
@@ -23,5 +22,8 @@ public class ConsoleInputActor extends AbstractActor {
         }).build();
     }
 
+    private void printWhite(String s) {
+        System.out.println("\u001B[37m" + s);
+    }
     public static class Read{}
 }

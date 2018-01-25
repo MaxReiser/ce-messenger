@@ -10,7 +10,6 @@ import scala.concurrent.duration.Duration;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.util.Scanner;
 import java.util.Set;
 
 import static akka.pattern.PatternsCS.ask;
@@ -26,6 +25,8 @@ public class ChatClientActor extends AbstractLoggingActor {
     ActorRef roomActor = null;
     ActorSelection registry = null;
     int errorCounter = 0;
+
+
 
     @Override
     public Receive createReceive() {
@@ -47,11 +48,11 @@ public class ChatClientActor extends AbstractLoggingActor {
         .match(Status.Failure.class, err ->{
             errorCounter++;
             if(errorCounter<5) {
-                System.out.println("ERROR: Not responding");
+                printRed("ERROR: Not responding");
                 requestServices();
             }
             else{
-                System.out.println("ERROR: System terminated due to registry errors");
+                printRed("ERROR: System terminated due to registry errors");
                 context().system().stop(this.getSelf());
                 context().system().terminate();
             }
@@ -75,18 +76,18 @@ public class ChatClientActor extends AbstractLoggingActor {
             int i = 0;
 
             for(String service : services){
-                System.out.println("ChatService[" + i++ + "]:\t" + service);
+                printWhite("ChatService[" + i++ + "]:\t" + service);
             }
-            System.out.println("Which Service would you like to choose?");
+            printWhite("Which Service would you like to choose?");
 
             do {
-                System.out.println("Command: ");
+                printWhite("Command: ");
                 String input = br.readLine();
 
-                if(input.equals("end")){
+                if(input.equals( "end")){
                     this.context().system().stop(this.getSelf());
                     context().system().terminate();
-                    System.out.println("Chat Client shut down");
+                    printWhite( "Chat Client shut down");
                     return;
                 }
 
@@ -94,7 +95,7 @@ public class ChatClientActor extends AbstractLoggingActor {
                     selectedService = Integer.parseInt(input);
                     if (selectedService >= 0 && selectedService < services.length) validInput = true;
                 } catch (NumberFormatException ex) {
-                    System.out.println("ERROR: Not a correct number");
+                    printRed("ERROR: Not a correct number");
                 }
 
             }while(!validInput);
@@ -104,7 +105,7 @@ public class ChatClientActor extends AbstractLoggingActor {
 
         }
         catch (Exception e){
-                System.out.println(e.getMessage());
+                printWhite(e.getMessage());
         }
     }
 
@@ -121,13 +122,12 @@ public class ChatClientActor extends AbstractLoggingActor {
             Room[] rooms = temp.toArray(new Room[temp.size()]);
             int i = 0;
             for(Room room : rooms){
-                System.out.println("Room[" + i++ + "]:\t" + room.toString());
+                printWhite("Room[" + i++ + "]:\t" + room.toString());
             }
-            System.out.println("Choose a room or go back to services");
+            printWhite("Choose a room or go back to services");
             do {
-                System.out.println("Command: ");
+                printWhite("Command: ");
                 String input = br.readLine();
-                log().info("read: " + input);//todo
                 String[] parts = input.split("\\s+");
 
                 String signalWord = parts[0];
@@ -154,14 +154,14 @@ public class ChatClientActor extends AbstractLoggingActor {
                                     else throw new NumberFormatException();
                                 }
                                 else{
-                                    log().info("ERROR: No name given");
+                                    printRed("ERROR: No name given");
                                 }
                             }
                             else{
-                                log().info("ERROR: No room number given");
+                                printRed( "ERROR: No room number given");
                             }
                         } catch (NumberFormatException ex) {
-                          log().info("ERROR: Not a correct room number");
+                          printRed("ERROR: Not a correct room number");
                         }
                         if(validInput){
                             Room chatRoom = rooms[selectedRoom];
@@ -172,13 +172,13 @@ public class ChatClientActor extends AbstractLoggingActor {
                         }
                         break;
                     default:
-                        log().info("ERROR: Invalid command!");
+                        printRed("ERROR: Invalid command!");
                         break;
                 }
             }while(!validInput);
         }
         catch (Exception e){
-            System.out.println(e.getMessage());
+            printWhite(e.getMessage());
         }
     }
 
@@ -198,4 +198,14 @@ public class ChatClientActor extends AbstractLoggingActor {
     public static class Start{}
     public static class ChatRoomLeft{}
     public static class ChatRoomError{}
+
+    private void printWhite(String s) {
+        System.out.println("\u001B[37m" + s);
+    }
+
+    private void printRed(String s) {
+        System.out.println("\u001B[31m" + s);
+        System.out.print("\u001B[37m" + "");
+    }
+
 }

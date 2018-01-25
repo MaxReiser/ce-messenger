@@ -35,7 +35,7 @@ public class ChatRoomActor extends AbstractActor {
 
         .match(RoomJoined.class, rooms ->{
             active = response = true;
-            System.out.println("Room successfully joined");
+            printGreen("Room successfully joined");
             inputActor = this.context().system().actorOf(Props.create(ConsoleInputActor.class));
             inputActor.tell(new ConsoleInputActor.Read(), this.getSelf());
         })
@@ -47,15 +47,15 @@ public class ChatRoomActor extends AbstractActor {
                 case ROOM_NOT_JOINED:
                     trigger.tell(new ChatClientActor.ChatRoomError(), this.getSelf());
                     this.getContext().getSystem().stop(inputActor);
-                    System.out.println("ERROR: Room not joined");
+                    printRed("ERROR: Room not joined");
                     break;
                 case ROOM_NOT_AVAILABLE:
                     trigger.tell(new ChatClientActor.ChatRoomError(), this.getSelf());
                     this.getContext().getSystem().stop(inputActor);
-                    System.out.println("ERROR: This room is not available, choose another room");
+                    printRed("ERROR: This room is not available, choose another room");
                     break;
                 case ROOM_ALREADY_JOINED:
-                    System.out.println("ERROR: Room already joined");
+                    printRed("ERROR: Room already joined");
                     break;
             }
         })
@@ -85,10 +85,10 @@ public class ChatRoomActor extends AbstractActor {
                     if (message.getMessage() == null) output += "empty Message";
                     else output += message.getMessage();
 
-                    System.out.println(output);
+                    printGreen(output);
 
                 } else {
-                    System.out.println("Spamming recognized. Leaving room...");
+                    printRed("Spamming recognized. Leaving room...");
                     inputActor.tell(new ConsoleInputActor.Read(), this.getSelf());
                     leaveRoom();
                 }
@@ -99,7 +99,7 @@ public class ChatRoomActor extends AbstractActor {
             response = true;
             active = false;
             timer.cancel();
-            System.out.println(left.getRoom() + " successfully left");
+            printGreen(left.getRoom() + " successfully left");
             this.context().system().stop(this.inputActor);
             this.trigger.tell(new ChatClientActor.ChatRoomLeft(), this.getSelf());
             this.context().system().stop(this.getSelf());
@@ -132,7 +132,7 @@ public class ChatRoomActor extends AbstractActor {
                 timer.schedule(getChatRoomTask(), 5000);
                 break;
             default:
-                System.out.println("Wrong command: use \"send\" to send a message or \"leave\" to leave the room");
+                printRed("Wrong command: use \"send\" to send a message or \"leave\" to leave the room");
                 inputActor.tell(new ConsoleInputActor.Read(), self());
                 break;
         }
@@ -186,8 +186,7 @@ public class ChatRoomActor extends AbstractActor {
             @Override
             public void run() {
                 if(!response && active) {
-                    System.out.println("ERROR: Chat service not responding");
-                    System.out.println(inputActor);
+                    printRed("ERROR: Chat service not responding");
                     if (inputActor != null) {
                         getContext().getSystem().stop(inputActor);
                     }
@@ -204,7 +203,7 @@ public class ChatRoomActor extends AbstractActor {
                 if(!response) {
                     leaveCounter++;
                     if(leaveCounter > 5) {
-                        System.out.println("ERROR: Chat room not responding");
+                        printRed("ERROR: Chat room not responding");
                         if(inputActor != null){
                             getContext().getSystem().stop(inputActor);
                         }
@@ -219,5 +218,12 @@ public class ChatRoomActor extends AbstractActor {
                 }
             }
         };
+    }
+    private void printGreen(String s) {
+        System.out.println("\u001B[32m" + s);
+    }
+
+    private void printRed(String s) {
+        System.out.println("\u001B[31m" + s);
     }
 }

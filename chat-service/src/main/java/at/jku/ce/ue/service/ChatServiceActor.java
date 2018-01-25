@@ -22,12 +22,11 @@ public class ChatServiceActor extends AbstractLoggingActor {
 	private Timer timer = new Timer();
 	private Boolean response = false;
 
-	//todo preStart()
 	@Override
 	public void preStart() {
 		rooms.put(new Room("room#1"), new HashSet<>());
 		rooms.put(new Room("room#2"), new HashSet<>());
-
+		rooms.put(new Room("room#3"), new HashSet<>());
 		response = false;
 		for(Room r:rooms.keySet()) log().info("Available Rooms: " + r.getName());
 		ActorSelection registry = this.context().system().actorSelection(helper.getChatServiceRegistry());
@@ -112,7 +111,6 @@ public class ChatServiceActor extends AbstractLoggingActor {
 					if(msg.getMessage() != null && msg.getRoom() != null) {
 						participants = null;
 						participants = rooms.get(msg.getRoom());
-						log().info("SendMessage: " + msg.getRoom().toString());//todo
 						if (participants == null) {
 							this.getSender().tell(new ErrorOccurred(ErrorOccurred.Error.ROOM_NOT_AVAILABLE), this.getSelf());
 						} else {
@@ -120,17 +118,14 @@ public class ChatServiceActor extends AbstractLoggingActor {
 							for (Participant p : participants) {
 								if (p.getRef().equals(this.getSender())) {
 									isRoomParticipant = true;
-									log().info("participants: " + isRoomParticipant);
 									break;
 								}
 							}
 							if (isRoomParticipant) {
-								log().info("if (isRoomParticipant)");//todo
 								for (Participant p : participants) {
 									p.ref.tell(new NewMessageAvailable(msg.getRoom(), p.name, msg.getMessage()), self());
 								}
 							} else {
-								log().info("if (!isRoomParticipant)");//todo
 								this.getSender().tell(new ErrorOccurred(ErrorOccurred.Error.ROOM_NOT_JOINED), this.getSelf());
 							}
 						}
