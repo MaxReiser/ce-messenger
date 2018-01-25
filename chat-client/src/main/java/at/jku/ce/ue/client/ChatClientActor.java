@@ -110,10 +110,11 @@ public class ChatClientActor extends AbstractLoggingActor {
     }
 
     public void receiveRooms(AvailableRooms message){
-       BufferedReader br = null;
+       BufferedReader br;
 
         boolean validInput = false;
         int selectedRoom = -1;
+        String input;
 
         try{
             br = new BufferedReader(new InputStreamReader(System.in));
@@ -127,7 +128,7 @@ public class ChatClientActor extends AbstractLoggingActor {
             printWhite("Choose a room or go back to services");
             do {
                 printWhite("Command: ");
-                String input = br.readLine();
+                input = br.readLine();
                 String[] parts = input.split("\\s+");
 
                 String signalWord = parts[0];

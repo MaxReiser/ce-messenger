@@ -67,24 +67,11 @@ public class ChatServiceActor extends AbstractLoggingActor {
 						}
 					}
 				})
-
 				.match(GetAvailableRooms.class, getAvailableRooms -> {
 					Set<Room> roomsSet = new HashSet<>();
 					roomsSet.addAll(rooms.keySet());
 					this.sender().tell(new AvailableRooms(helper.getActorPath(self()), roomsSet), self());
 				})
-
-//				.match(Start.class, start -> {
-//					for(String name:start.roomName) rooms.put(new Room(name), new HashSet<Participant>());
-//
-//					response = false;
-//					for(Room r:rooms.keySet()) log().info(r.getName());
-//					//rooms.keySet().forEach(System.out::println);
-//					ActorSelection registry = this.context().system().actorSelection(helper.getChatServiceRegistry());
-//					registry.tell(new RegisterChatService(), self());
-//					timer.schedule(getRegistryTask(), 5000);
-//				})
-
 				.match(LeaveRoom.class, leaveRoom -> {
 					if(leaveRoom.getRoom() != null) {
 						participants = null;
@@ -188,7 +175,6 @@ public class ChatServiceActor extends AbstractLoggingActor {
 			}
 		};
 	}
-
 	public void cleanUpRooms() {
 		//todo increase timeout
 		Iterator it = rooms.entrySet().iterator();

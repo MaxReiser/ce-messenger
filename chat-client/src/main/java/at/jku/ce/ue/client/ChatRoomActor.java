@@ -8,15 +8,14 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class ChatRoomActor extends AbstractActor {
-    public static final String ANSI_GREEN = "\u001B[32m";
     boolean active = false;
-    Room chatRoom;
-    ActorRef trigger;
-    ActorSelection chatService;
-    ActorRef inputActor;
-    String name;
+    private Room chatRoom;
+    private ActorRef trigger;
+    private ActorSelection chatService;
+    private ActorRef inputActor;
+    private String name;
     boolean response = false;
-    Timer timer = new Timer();
+    private Timer timer = new Timer();
     int leaveCounter = 0;
     long lastReceived = 0;
     int spamCounter = 0;
