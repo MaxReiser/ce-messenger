@@ -10,6 +10,7 @@ import scala.concurrent.duration.Duration;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.Scanner;
 import java.util.Set;
 
 import static akka.pattern.PatternsCS.ask;
@@ -18,7 +19,7 @@ import static akka.pattern.PatternsCS.pipe;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-public class ChatClientActor extends AbstractActor {
+public class ChatClientActor extends AbstractLoggingActor {
     Timeout t = new Timeout(Duration.create(5, TimeUnit.SECONDS));
     CEHelper helper = new CEHelper(this.context().system(), ConfigFactory.load());
     String chatService = null;
@@ -108,12 +109,14 @@ public class ChatClientActor extends AbstractActor {
     }
 
     public void receiveRooms(AvailableRooms message){
-        BufferedReader br = null;
+       BufferedReader br = null;
+
         boolean validInput = false;
         int selectedRoom = -1;
 
         try{
             br = new BufferedReader(new InputStreamReader(System.in));
+
             Set<Room> temp = message.getRooms();
             Room[] rooms = temp.toArray(new Room[temp.size()]);
             int i = 0;
@@ -124,6 +127,7 @@ public class ChatClientActor extends AbstractActor {
             do {
                 System.out.println("Command: ");
                 String input = br.readLine();
+                log().info("read: " + input);//todo
                 String[] parts = input.split("\\s+");
 
                 String signalWord = parts[0];
@@ -138,8 +142,7 @@ public class ChatClientActor extends AbstractActor {
 
                 switch(signalWord){
                     case "services":
-                        CompletableFuture<Object> future = ask(registry, new GetAvailableChatServices(), 5000).toCompletableFuture();
-                        pipe(future, this.context().system().dispatcher()).to(this.getSelf());
+                        requestServices();
                         validInput = true;
                         break;
                     case "join":
@@ -151,14 +154,14 @@ public class ChatClientActor extends AbstractActor {
                                     else throw new NumberFormatException();
                                 }
                                 else{
-                                    System.out.println("ERROR: No name given");
+                                    log().info("ERROR: No name given");
                                 }
                             }
                             else{
-                                System.out.println("ERROR: No room number given");
+                                log().info("ERROR: No room number given");
                             }
                         } catch (NumberFormatException ex) {
-                            System.out.println("ERROR: Not a correct room number");
+                          log().info("ERROR: Not a correct room number");
                         }
                         if(validInput){
                             Room chatRoom = rooms[selectedRoom];
@@ -169,7 +172,7 @@ public class ChatClientActor extends AbstractActor {
                         }
                         break;
                     default:
-                        System.out.println("ERROR: Invalid command!");
+                        log().info("ERROR: Invalid command!");
                         break;
                 }
             }while(!validInput);

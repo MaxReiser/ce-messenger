@@ -8,6 +8,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class ChatRoomActor extends AbstractActor {
+    public static final String ANSI_GREEN = "\u001B[32m";
     boolean active = false;
     Room chatRoom;
     ActorRef trigger;
@@ -105,12 +106,14 @@ public class ChatRoomActor extends AbstractActor {
         })
 
         .match(GetStatus.class, req -> {
-            //this.getSender().tell(new Heartbeat(), this.getSelf());
+            this.getSender().tell(new Heartbeat(), this.getSelf());
         })
 
         .match(UserInput.class, input ->{
-            this.chat(input);
-            if(active) this.getSender().tell(new ConsoleInputActor.Read(), this.getSelf());
+            if(active){
+                this.chat(input);
+                this.getSender().tell(new ConsoleInputActor.Read(), this.getSelf());
+            }
         }).build();
     }
 

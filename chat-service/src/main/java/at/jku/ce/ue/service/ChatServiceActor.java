@@ -112,7 +112,7 @@ public class ChatServiceActor extends AbstractLoggingActor {
 					if(msg.getMessage() != null && msg.getRoom() != null) {
 						participants = null;
 						participants = rooms.get(msg.getRoom());
-						log().info("SendMessage: " + msg.getRoom().toString());
+						log().info("SendMessage: " + msg.getRoom().toString());//todo
 						if (participants == null) {
 							this.getSender().tell(new ErrorOccurred(ErrorOccurred.Error.ROOM_NOT_AVAILABLE), this.getSelf());
 						} else {
@@ -125,10 +125,12 @@ public class ChatServiceActor extends AbstractLoggingActor {
 								}
 							}
 							if (isRoomParticipant) {
+								log().info("if (isRoomParticipant)");//todo
 								for (Participant p : participants) {
 									p.ref.tell(new NewMessageAvailable(msg.getRoom(), p.name, msg.getMessage()), self());
 								}
 							} else {
+								log().info("if (!isRoomParticipant)");//todo
 								this.getSender().tell(new ErrorOccurred(ErrorOccurred.Error.ROOM_NOT_JOINED), this.getSelf());
 							}
 						}
@@ -198,7 +200,7 @@ public class ChatServiceActor extends AbstractLoggingActor {
 			while(it.hasNext()){
 				Map.Entry pair = (Map.Entry)it.next();
 				for(Participant p:(HashSet<Participant>)pair.getValue()){
-					CompletableFuture<Object> future = PatternsCS.ask(p.ref, new GetStatus(), 5000).toCompletableFuture();
+					CompletableFuture<Object> future = PatternsCS.ask(p.ref, new GetStatus(), 15000).toCompletableFuture();
 					future.thenApply(s -> {
 						return s;
 					}).exceptionally(err -> {
