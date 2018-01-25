@@ -21,7 +21,6 @@ public class ChatService {
 
 		// get fully qualified path of sample actor
 		System.out.println(helper.getActorPath(sampleActor));
-
 		//sampleActor.tell(new ChatServiceActor.Start("room#1", "room#2", "room#3"), ActorRef.noSender());
 	}
 

@@ -115,11 +115,11 @@ public class ChatRoomActor extends AbstractActor {
     }
 
     public void chat(UserInput input){
-        response = false;
         String[] parts = input.getText().split("\\s+");
 
         switch(parts[0]){
             case "leave":
+                response = false;
                 leaveRoom();
                 timer.schedule(getLeaveRoomTask(), 5000);
                 break;
@@ -130,6 +130,8 @@ public class ChatRoomActor extends AbstractActor {
                 break;
             default:
                 System.out.println("Wrong command: use \"send\" to send a message or \"leave\" to leave the room");
+                inputActor.tell(new ConsoleInputActor.Read(), self());
+                break;
         }
     }
 

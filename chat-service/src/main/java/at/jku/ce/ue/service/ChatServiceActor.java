@@ -17,12 +17,12 @@ public class ChatServiceActor extends AbstractLoggingActor {
 	private HashMap<Room, HashSet<Participant>> rooms = new HashMap<>();
 	private CEHelper helper = new CEHelper(this.context().system(), ConfigFactory.load("application.conf"));
 
-	HashSet<Participant> participants;
+	private HashSet<Participant> participants;
 
-	Timer timer = new Timer();
-	Boolean response = false;
+	private Timer timer = new Timer();
+	private Boolean response = false;
 
-	//todo preStart() method?
+	//todo preStart()
 	@Override
 	public void preStart() {
 		rooms.put(new Room("room#1"), new HashSet<>());
@@ -32,7 +32,7 @@ public class ChatServiceActor extends AbstractLoggingActor {
 		for(Room r:rooms.keySet()) log().info("Available Rooms: " + r.getName());
 		ActorSelection registry = this.context().system().actorSelection(helper.getChatServiceRegistry());
 		registry.tell(new RegisterChatService(), self());
-		timer.schedule(getRegistryTask(), 5000);
+		timer.schedule(getRegistryTask(), 10000);
 	}
 
 	@Override
@@ -47,6 +47,7 @@ public class ChatServiceActor extends AbstractLoggingActor {
 				})
 				.match(JoinRoom.class, join -> {
 					if(join.getRoom() != null && join.getName() != null) {
+						participants = null;
 						participants = rooms.get(join.getRoom());
 						if (participants == null) {
 							this.getSender().tell(new ErrorOccurred(ErrorOccurred.Error.ROOM_NOT_AVAILABLE), this.getSelf());
@@ -87,6 +88,7 @@ public class ChatServiceActor extends AbstractLoggingActor {
 
 				.match(LeaveRoom.class, leaveRoom -> {
 					if(leaveRoom.getRoom() != null) {
+						participants = null;
 						participants = rooms.get(leaveRoom.getRoom());
 						if (participants == null) {
 							this.getSender().tell(new ErrorOccurred(ErrorOccurred.Error.ROOM_NOT_AVAILABLE), this.getSelf());
@@ -108,6 +110,7 @@ public class ChatServiceActor extends AbstractLoggingActor {
 
 				.match(SendMessage.class, msg -> {
 					if(msg.getMessage() != null && msg.getRoom() != null) {
+						participants = null;
 						participants = rooms.get(msg.getRoom());
 						if (participants == null) {
 							this.getSender().tell(new ErrorOccurred(ErrorOccurred.Error.ROOM_NOT_AVAILABLE), this.getSelf());
@@ -142,7 +145,7 @@ public class ChatServiceActor extends AbstractLoggingActor {
 		}
 
 		Start(int nrOfRooms) {
-			for(int i = 0; i < nrOfRooms; i++)roomName[i] = "room#" + i;
+			for(int i = 0; i < nrOfRooms; i++)roomName[i] = "room#" + (i + 1);
 		}
 
 		//default
@@ -180,29 +183,29 @@ public class ChatServiceActor extends AbstractLoggingActor {
 			@Override
 			public void run() {
 				if(!response) {
-					log().info("ChatServiceActor ERROR: ChatService not registered");
+					log().error("ChatServiceActor ERROR: ChatService not registered");
 				}
 				response = false;
 			}
 		};
 	}
 
-public void cleanUpRooms() {
+	public void cleanUpRooms() {
 		//todo increase timeout
-	Iterator it = rooms.entrySet().iterator();
-	while(it.hasNext()){
-		Map.Entry pair = (Map.Entry)it.next();
-		for(Participant p:(HashSet<Participant>)pair.getValue()){
-			CompletableFuture<Object> future = PatternsCS.ask(p.ref, new GetStatus(), 5000).toCompletableFuture();
-			future.thenApply(s -> {
-				return s;
-			}).exceptionally(err -> {
-				log().info(p.toString() + " was removed from room " + pair.getKey().toString());
-				((HashSet<Participant>)pair.getValue()).remove(p);
-				return err;
-			});
-		}
+		Iterator it = rooms.entrySet().iterator();
+			while(it.hasNext()){
+				Map.Entry pair = (Map.Entry)it.next();
+				for(Participant p:(HashSet<Participant>)pair.getValue()){
+					CompletableFuture<Object> future = PatternsCS.ask(p.ref, new GetStatus(), 5000).toCompletableFuture();
+					future.thenApply(s -> {
+						return s;
+					}).exceptionally(err -> {
+						log().info(p.toString() + " was removed from room " + pair.getKey().toString());
+						((HashSet<Participant>)pair.getValue()).remove(p);
+							return err;
+					});
+				}
+			}
 	}
-}
 
 }
