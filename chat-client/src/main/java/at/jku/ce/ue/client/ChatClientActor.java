@@ -47,6 +47,7 @@ public class ChatClientActor extends AbstractLoggingActor {
 
         .match(ChatRoomError.class, error -> {
             this.getContext().system().stop(this.getSender());
+            roomActor = null;
             requestRooms();
         })
 
@@ -75,7 +76,7 @@ public class ChatClientActor extends AbstractLoggingActor {
             this.receiveChatServices(services);
         })
 
-        .match(ChatClientActor.UserInput.class, input ->{
+        .match(UserInput.class, input ->{
             if(roomActor != null){
                 roomActor.tell(new ChatRoomActor.UserInput(input.getText()), self());
                 inputActor.tell(new ConsoleInputActor.Read(), this.getSelf());

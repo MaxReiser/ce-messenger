@@ -128,7 +128,6 @@ public class ChatRoomActor extends AbstractActor {
                 response = false;
                 chatService.tell(new SendMessage(this.chatRoom, input.getText().substring(parts[0].length()+1, input.getText().length())), this.getSelf());
                 timer.schedule(getChatRoomTask(), 5000);
-                System.out.println("gesendet");
                 break;
             default:
                 printRed("Wrong command: use \"send\" to send a message or \"leave\" to leave the room");
@@ -186,6 +185,7 @@ public class ChatRoomActor extends AbstractActor {
                 if(!joinResponse) {
                     printRed("ERROR: Chat service not responding");
                     trigger.tell(new ChatClientActor.ChatRoomError(), getSelf());
+                    timer.cancel();
                 }
             }
         };
@@ -198,6 +198,7 @@ public class ChatRoomActor extends AbstractActor {
                 if(!response && active) {
                     printRed("ERROR: Chat service not responding");
                     trigger.tell(new ChatClientActor.ChatRoomError(), getSelf());
+                    timer.cancel();
                 }
             }
         };
