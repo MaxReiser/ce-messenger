@@ -196,6 +196,7 @@ public class ChatRoomActor extends AbstractActor {
             @Override
             public void run() {
                 if(!response && active) {
+                    active = false;
                     printRed("ERROR: Chat service not responding");
                     trigger.tell(new ChatClientActor.ChatRoomError(), getSelf());
                     timer.cancel();
