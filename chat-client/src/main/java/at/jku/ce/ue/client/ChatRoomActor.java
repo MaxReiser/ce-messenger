@@ -4,6 +4,7 @@ import akka.actor.*;
 import at.jku.ce.ue.api.*;
 import at.jku.ce.ue.data.Room;
 
+import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -12,10 +13,11 @@ public class ChatRoomActor extends AbstractActor {
     private Room chatRoom;
     private ActorRef trigger;
     private ActorSelection chatService;
-    private ActorRef inputActor;
     private String name;
     boolean response = false;
-    private Timer timer = new Timer();
+    boolean joinResponse = false;
+    boolean leaveResponse = false;
+    private Timer timer;
     int leaveCounter = 0;
     long lastReceived = 0;
     int spamCounter = 0;
@@ -23,20 +25,20 @@ public class ChatRoomActor extends AbstractActor {
     @Override
     public Receive createReceive() {
         return receiveBuilder().match(JoinChatRoom.class, start ->{
+            timer = new Timer();
             active = false;
             trigger = this.getSender();
+            joinResponse = false;
             this.chatRoom = start.getRoom();
             this.name = start.getName();
             chatService = this.context().system().actorSelection(start.getChatService());
             chatService.tell(new JoinRoom(this.chatRoom, this.name), this.getSelf());
-            timer.schedule(getChatRoomTask(), 5000);
+            timer.schedule(getJoinTask(), 5000);
         })
 
         .match(RoomJoined.class, rooms ->{
-            active = response = true;
+            active = joinResponse = true;
             printGreen("Room successfully joined");
-            inputActor = this.context().system().actorOf(Props.create(ConsoleInputActor.class));
-            inputActor.tell(new ConsoleInputActor.Read(), this.getSelf());
         })
 
         .match(ErrorOccurred.class, error ->{
@@ -45,12 +47,10 @@ public class ChatRoomActor extends AbstractActor {
             switch(error.getError()){
                 case ROOM_NOT_JOINED:
                     trigger.tell(new ChatClientActor.ChatRoomError(), this.getSelf());
-                    this.getContext().getSystem().stop(inputActor);
                     printRed("ERROR: Room not joined");
                     break;
                 case ROOM_NOT_AVAILABLE:
                     trigger.tell(new ChatClientActor.ChatRoomError(), this.getSelf());
-                    this.getContext().getSystem().stop(inputActor);
                     printRed("ERROR: This room is not available, choose another room");
                     break;
                 case ROOM_ALREADY_JOINED:
@@ -88,18 +88,17 @@ public class ChatRoomActor extends AbstractActor {
 
                 } else {
                     printRed("Spamming recognized. Leaving room...");
-                    inputActor.tell(new ConsoleInputActor.Read(), this.getSelf());
+                    //TODO
                     leaveRoom();
                 }
             }
         })
 
         .match(RoomLeft.class, left -> {
-            response = true;
+            leaveResponse = true;
             active = false;
             timer.cancel();
             printGreen(left.getRoom() + " successfully left");
-            this.context().system().stop(this.inputActor);
             this.trigger.tell(new ChatClientActor.ChatRoomLeft(), this.getSelf());
             this.context().system().stop(this.getSelf());
         })
@@ -121,7 +120,7 @@ public class ChatRoomActor extends AbstractActor {
 
         switch(parts[0]){
             case "leave":
-                response = false;
+                leaveResponse = false;
                 leaveRoom();
                 timer.schedule(getLeaveRoomTask(), 5000);
                 break;
@@ -129,10 +128,10 @@ public class ChatRoomActor extends AbstractActor {
                 response = false;
                 chatService.tell(new SendMessage(this.chatRoom, input.getText().substring(parts[0].length()+1, input.getText().length())), this.getSelf());
                 timer.schedule(getChatRoomTask(), 5000);
+                System.out.println("gesendet");
                 break;
             default:
                 printRed("Wrong command: use \"send\" to send a message or \"leave\" to leave the room");
-                inputActor.tell(new ConsoleInputActor.Read(), self());
                 break;
         }
     }
@@ -180,15 +179,24 @@ public class ChatRoomActor extends AbstractActor {
         }
     }
 
+    public TimerTask getJoinTask(){
+        return new TimerTask() {
+            @Override
+            public void run() {
+                if(!joinResponse) {
+                    printRed("ERROR: Chat service not responding");
+                    trigger.tell(new ChatClientActor.ChatRoomError(), getSelf());
+                }
+            }
+        };
+    }
+
     public TimerTask getChatRoomTask(){
         return new TimerTask() {
             @Override
             public void run() {
                 if(!response && active) {
                     printRed("ERROR: Chat service not responding");
-                    if (inputActor != null) {
-                        getContext().getSystem().stop(inputActor);
-                    }
                     trigger.tell(new ChatClientActor.ChatRoomError(), getSelf());
                 }
             }
@@ -199,13 +207,10 @@ public class ChatRoomActor extends AbstractActor {
         return new TimerTask() {
             @Override
             public void run() {
-                if(!response) {
+                if(!leaveResponse) {
                     leaveCounter++;
                     if(leaveCounter > 5) {
                         printRed("ERROR: Chat room not responding");
-                        if(inputActor != null){
-                            getContext().getSystem().stop(inputActor);
-                        }
                         trigger.tell(new ChatClientActor.ChatRoomError(), getSelf());
                         timer.cancel();
                     }

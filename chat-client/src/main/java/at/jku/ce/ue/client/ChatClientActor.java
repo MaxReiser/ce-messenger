@@ -23,17 +23,22 @@ public class ChatClientActor extends AbstractLoggingActor {
     CEHelper helper = new CEHelper(this.context().system(), ConfigFactory.load());
     String chatService = null;
     ActorRef roomActor = null;
+    ActorRef inputActor = null;
     ActorSelection registry = null;
     int errorCounter = 0;
-
+    int status = 0;
+    String[] services;
+    Room[] rooms;
 
 
     @Override
     public Receive createReceive() {
         return receiveBuilder().match(Start.class, startMessage ->{
             errorCounter = 0;
+            status = 0;
             registry = this.context().system().actorSelection(helper.getChatServiceRegistry());
             this.requestServices();
+            inputActor = this.context().system().actorOf(Props.create(ConsoleInputActor.class));
         })
 
         .match(AvailableRooms.class, availableRooms -> {
@@ -53,38 +58,63 @@ public class ChatClientActor extends AbstractLoggingActor {
             }
             else{
                 printRed("ERROR: System terminated due to registry errors");
+                System.in.close();
+                context().system().stop(inputActor);
                 context().system().stop(this.getSelf());
                 context().system().terminate();
             }
-        }).match(ChatRoomLeft.class, left->{
+        })
+
+        .match(ChatRoomLeft.class, left->{
             requestRooms();
-        }).match(AvailableChatServices.class, services ->{
+            roomActor = null;
+        })
+
+        .match(AvailableChatServices.class, services ->{
             errorCounter = 0;
             this.receiveChatServices(services);
+        })
+
+        .match(ChatClientActor.UserInput.class, input ->{
+            if(roomActor != null){
+                roomActor.tell(new ChatRoomActor.UserInput(input.getText()), self());
+                inputActor.tell(new ConsoleInputActor.Read(), this.getSelf());
+            }
+            else{
+                switch(status){
+                    case 0:
+                        receiveChoosenService(input.getText());
+                        break;
+                    case 1:
+                        receiveChoosenRoom(input.getText());
+                        break;
+
+                }
+            }
         }).build();
     }
 
-    public void receiveChatServices(AvailableChatServices message){
-        BufferedReader br = null;
+    public void  receiveChatServices(AvailableChatServices message) {
+        Set<String> temp = message.getChatServices();
+        services = (temp).toArray(new String[temp.size()]);
+
+        int i = 0;
+
+        for (String service : services) {
+            printWhite("ChatService[" + i++ + "]:\t" + service);
+        }
+        printWhite("Which Service would you like to choose?");
+
+        printWhite("Command: ");
+        inputActor.tell(new ConsoleInputActor.Read(), this.getSelf());
+    }
+    public void receiveChoosenService(String input){
+        int selectedService = -1;
         boolean validInput = false;
-
-        try{
-            br = new BufferedReader(new InputStreamReader(System.in));
-            Set<String> temp = message.getChatServices();
-            String[] services = (temp).toArray(new String[temp.size()]);
-            int selectedService = -1;
-            int i = 0;
-
-            for(String service : services){
-                printWhite("ChatService[" + i++ + "]:\t" + service);
-            }
-            printWhite("Which Service would you like to choose?");
-
-            do {
-                printWhite("Command: ");
-                String input = br.readLine();
-
+        try {
                 if(input.equals( "end")){
+                    System.in.close();
+                    this.context().system().stop(inputActor);
                     this.context().system().stop(this.getSelf());
                     context().system().terminate();
                     printWhite( "Chat Client shut down");
@@ -96,39 +126,35 @@ public class ChatClientActor extends AbstractLoggingActor {
                     if (selectedService >= 0 && selectedService < services.length) validInput = true;
                 } catch (NumberFormatException ex) {
                     printRed("ERROR: Not a correct number");
+                    return;
                 }
 
-            }while(!validInput);
-
-            this.chatService = services[selectedService];
-            requestRooms();
-
+            if(validInput) {
+                this.chatService = services[selectedService];
+                requestRooms();
+            }
+            inputActor.tell(new ConsoleInputActor.Read(), this.getSelf());
         }
         catch (Exception e){
-                printWhite(e.getMessage());
+                printWhite("Receive Services " + e.getMessage());
         }
     }
 
-    public void receiveRooms(AvailableRooms message){
-       BufferedReader br;
+    public void receiveRooms(AvailableRooms message) {
+        Set<Room> temp = message.getRooms();
+        rooms = temp.toArray(new Room[temp.size()]);
+        int i = 0;
+        for (Room room : rooms) {
+            printWhite("Room[" + i++ + "]:\t" + room.toString());
+        }
+        printWhite("Choose a room or go back to services");
 
+        printWhite("Command: ");
+    }
+    public void receiveChoosenRoom(String input){
         boolean validInput = false;
         int selectedRoom = -1;
-        String input;
-
         try{
-            br = new BufferedReader(new InputStreamReader(System.in));
-
-            Set<Room> temp = message.getRooms();
-            Room[] rooms = temp.toArray(new Room[temp.size()]);
-            int i = 0;
-            for(Room room : rooms){
-                printWhite("Room[" + i++ + "]:\t" + room.toString());
-            }
-            printWhite("Choose a room or go back to services");
-            do {
-                printWhite("Command: ");
-                input = br.readLine();
                 String[] parts = input.split("\\s+");
 
                 String signalWord = parts[0];
@@ -144,8 +170,7 @@ public class ChatClientActor extends AbstractLoggingActor {
                 switch(signalWord){
                     case "services":
                         requestServices();
-                        validInput = true;
-                        break;
+                        return;
                     case "join":
                         try {
                             if(param != null) {
@@ -167,7 +192,7 @@ public class ChatClientActor extends AbstractLoggingActor {
                         if(validInput){
                             Room chatRoom = rooms[selectedRoom];
 
-                            roomActor = this.context().system().actorOf(Props.create(ChatRoomActor.class), "room-actor");
+                            roomActor = this.context().system().actorOf(Props.create(ChatRoomActor.class));
 
                             roomActor.tell(new ChatRoomActor.JoinChatRoom(chatRoom, name, this.chatService), this.getSelf());
                         }
@@ -176,7 +201,8 @@ public class ChatClientActor extends AbstractLoggingActor {
                         printRed("ERROR: Invalid command!");
                         break;
                 }
-            }while(!validInput);
+
+            inputActor.tell(new ConsoleInputActor.Read(), this.getSelf());
         }
         catch (Exception e){
             printWhite(e.getMessage());
@@ -184,13 +210,14 @@ public class ChatClientActor extends AbstractLoggingActor {
     }
 
     private void requestRooms(){
+        status = 1;
         ActorSelection chatService = this.context().system().actorSelection(this.chatService);
         CompletableFuture<Object> future = ask(chatService, new GetAvailableRooms(), t).toCompletableFuture();
-
         pipe(future, this.context().system().dispatcher()).to(this.getSelf());
     }
 
     private void requestServices(){
+        status = 0;
         CompletableFuture<Object> future = ask(registry, new GetAvailableChatServices(), 5000).toCompletableFuture();
         pipe(future, this.context().system().dispatcher()).to(this.getSelf());
     }
@@ -199,6 +226,17 @@ public class ChatClientActor extends AbstractLoggingActor {
     public static class Start{}
     public static class ChatRoomLeft{}
     public static class ChatRoomError{}
+    public static class UserInput {
+        String text = null;
+
+        public String getText() {
+            return text;
+        }
+
+        public UserInput(String text) {
+            this.text = text;
+        }
+    }
 
     private void printWhite(String s) {
         System.out.println("\u001B[37m" + s);
