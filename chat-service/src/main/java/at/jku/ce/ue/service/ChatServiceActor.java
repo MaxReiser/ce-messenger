@@ -122,25 +122,6 @@ public class ChatServiceActor extends AbstractLoggingActor {
 				.build();
 	}
 
-
-	public static class Start{
-		private String [] roomName;
-
-		Start(String ...names){
-			roomName = names;
-		}
-
-		Start(int nrOfRooms) {
-			for(int i = 0; i < nrOfRooms; i++)roomName[i] = "room#" + (i + 1);
-		}
-
-		//default
-		Start() {
-			roomName[0] = "room#1";
-			roomName[1] = "room#2";
-		}
-	}
-
 	private class Participant implements Serializable, Comparable<Participant>{
 		private String name;
 		private ActorRef ref;
