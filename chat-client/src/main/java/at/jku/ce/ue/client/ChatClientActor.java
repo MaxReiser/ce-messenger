@@ -8,8 +8,6 @@ import at.jku.ce.ue.helper.CEHelper;
 import com.typesafe.config.ConfigFactory;
 import scala.concurrent.duration.Duration;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.Set;
 
 import static akka.pattern.PatternsCS.ask;
